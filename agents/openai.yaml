@@ -1,0 +1,8 @@
+interface:
+  display_name: "MNG Design Skill"
+  short_description: "后台管理系统前台原型设计"
+  brand_color: "#2563EB"
+  default_prompt: "Use $mng-design-skill to design a frontend prototype for an admin management system from my requirements."
+
+policy:
+  allow_implicit_invocation: true
