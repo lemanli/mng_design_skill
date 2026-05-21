@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>华风数据集管理系统一期原型</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'Microsoft YaHei', 'PingFang SC', 'sans-serif']
+          },
+          colors: {
+            ruoyi: {
+              dark: '#263445',
+              darker: '#1f2d3d',
+              blue: '#1890ff'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    [x-cloak] { display: none !important; }
+    body { font-size: 14px; }
+    .scroll-thin::-webkit-scrollbar { width: 8px; height: 8px; }
+    .scroll-thin::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 999px; }
+    .grid-canvas {
+      background-image:
+        linear-gradient(#e5e7eb 1px, transparent 1px),
+        linear-gradient(90deg, #e5e7eb 1px, transparent 1px);
+      background-size: 22px 22px;
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 antialiased">
+  <div x-data="huafengPrototype()" x-init="init()" class="min-h-screen">
+    <aside class="fixed inset-y-0 left-0 z-30 w-60 bg-ruoyi-dark text-slate-200 shadow-xl">
+      <div class="flex h-14 items-center gap-2 bg-ruoyi-darker px-4">
+        <div class="flex h-8 w-8 items-center justify-center rounded bg-blue-500 text-white">
+          <i class="fa-solid fa-database text-sm"></i>
+        </div>
+        <div>
+          <div class="text-sm font-semibold text-white">华风数据集管理系统</div>
+          <div class="text-[11px] text-slate-400">一期原型演示</div>
+        </div>
+      </div>
+
+      <nav class="mt-3 px-2 text-sm">
+        <div class="mb-2 px-3 text-xs text-slate-400">主菜单</div>
+        <button @click="setView('tasks')" :class="navClass('tasks')" class="mb-1 flex w-full items-center gap-3 rounded px-3 py-2 text-left">
+          <i class="fa-solid fa-folder-tree w-4"></i>
+          <span>语料管理</span>
+        </button>
+        <div class="ml-5 border-l border-slate-600 pl-2">
+          <button @click="setView('tasks')" :class="subNavClass('tasks')" class="mb-1 block w-full rounded px-3 py-1.5 text-left">语料任务列表</button>
+          <button @click="setView('detail')" :class="subNavClass('detail')" class="mb-1 block w-full rounded px-3 py-1.5 text-left">批次详情</button>
+          <button @click="setView('review')" :class="subNavClass('review')" class="mb-1 block w-full rounded px-3 py-1.5 text-left">语料确认初审</button>
+          <button @click="setView('pipeline')" :class="subNavClass('pipeline')" class="mb-1 block w-full rounded px-3 py-1.5 text-left">Pipeline / 算子</button>
+        </div>
+        <button @click="setView('annotation')" :class="navClass('annotation')" class="mt-2 flex w-full items-center gap-3 rounded px-3 py-2 text-left">
+          <i class="fa-solid fa-tags w-4"></i>
+          <span>标注管理</span>
+          <span class="ml-auto rounded bg-slate-700 px-1.5 py-0.5 text-[10px] text-slate-300">预留</span>
+        </button>
+      </nav>
+    </aside>
+
+    <div class="ml-60 min-h-screen">
+      <header class="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-slate-200 bg-white px-5 shadow-sm">
+        <div class="flex items-center gap-3 text-sm text-slate-500">
+          <i class="fa-solid fa-bars text-slate-400"></i>
+          <span>首页</span>
+          <i class="fa-solid fa-angle-right text-xs"></i>
+          <span class="font-medium text-slate-700" x-text="pageTitle"></span>
+        </div>
+        <div class="flex items-center gap-4">
+          <button class="relative text-slate-500 hover:text-blue-600">
+            <i class="fa-regular fa-bell"></i>
+            <span class="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-red-500"></span>
+          </button>
+          <div class="flex items-center gap-2 text-sm">
+            <div class="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 font-semibold text-blue-700">演</div>
+            <span class="text-slate-600">演示管理员</span>
+          </div>
+        </div>
+      </header>
+
+      <div class="border-b border-slate-200 bg-white px-5 py-2">
+        <div class="flex gap-2 text-xs">
+          <span class="rounded border border-blue-200 bg-blue-50 px-3 py-1 text-blue-700">语料任务列表</span>
+          <span class="rounded border border-slate-200 bg-slate-50 px-3 py-1 text-slate-500">批次详情</span>
+          <span class="rounded border border-slate-200 bg-slate-50 px-3 py-1 text-slate-500">语料确认初审</span>
+        </div>
+      </div>
+
+      <main class="p-5">
+        <section x-show="view === 'tasks'" x-cloak>
+          <div class="mb-4 flex items-start justify-between">
+            <div>
+              <h1 class="text-xl font-semibold text-slate-800">语料任务列表</h1>
+              <p class="mt-1 text-sm text-slate-500">围绕原始语料收集任务，管理任务成员、批次、上传审核和初审入口。</p>
+            </div>
+            <div class="flex gap-2">
+              <button @click="toast('导入任务演示数据')" class="rounded border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
+                <i class="fa-solid fa-file-import mr-1"></i>导入
+              </button>
+              <button @click="toast('已导出当前筛选任务')" class="rounded border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
+                <i class="fa-solid fa-file-export mr-1"></i>导出
+              </button>
+              <button @click="openTaskModal('create')" class="rounded bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700">
+                <i class="fa-solid fa-plus mr-1"></i>新建任务
+              </button>
+            </div>
+          </div>
+
+          <div class="mb-4 grid grid-cols-4 gap-4">
+            <template x-for="item in stats" :key="item.label">
+              <div class="rounded border border-slate-200 bg-white p-4 shadow-sm">
+                <div class="flex items-center justify-between">
+                  <span class="text-sm text-slate-500" x-text="item.label"></span>
+                  <i :class="item.icon" class="text-slate-400"></i>
+                </div>
+                <div class="mt-2 flex items-end justify-between">
+                  <span class="text-2xl font-semibold text-slate-800" x-text="item.value"></span>
+                  <span :class="item.trendClass" class="text-xs font-medium" x-text="item.trend"></span>
+                </div>
+              </div>
+            </template>
+          </div>
+
+          <div class="mb-4 rounded border border-slate-200 bg-white p-4 shadow-sm">
+            <div class="grid grid-cols-5 gap-3">
+              <label class="text-sm">
+                <span class="mb-1 block text-slate-600">任务名称</span>
+                <input x-model="filters.keyword" class="h-9 w-full rounded border border-slate-300 px-3 text-sm focus:border-blue-500 focus:outline-none" placeholder="模糊搜索任务名称" />
+              </label>
+              <label class="text-sm">
+                <span class="mb-1 block text-slate-600">任务类型</span>
+                <select x-model="filters.type" class="h-9 w-full rounded border border-slate-300 px-3 text-sm focus:border-blue-500 focus:outline-none">
+                  <option value="">全部类型</option>
+                  <option>文本</option>
+                  <option>图片</option>
+                  <option>视频</option>
+                  <option>混合</option>
+                </select>
+              </label>
+              <label class="text-sm">
+                <span class="mb-1 block text-slate-600">任务状态</span>
+                <select x-model="filters.status" class="h-9 w-full rounded border border-slate-300 px-3 text-sm focus:border-blue-500 focus:outline-none">
+                  <option value="">全部状态</option>
+                  <option>执行中</option>
+                  <option>待初审</option>
+                  <option>修订中</option>
+                  <option>已驳回</option>
+                  <option>已完成</option>
+                </select>
+              </label>
+              <label class="text-sm">
+                <span class="mb-1 block text-slate-600">负责人</span>
+                <select x-model="filters.owner" class="h-9 w-full rounded border border-slate-300 px-3 text-sm focus:border-blue-500 focus:outline-none">
+                  <option value="">全部负责人</option>
+                  <option>张婧</option>
+                  <option>刘晨</option>
+                  <option>周明</option>
+                </select>
+              </label>
+              <div class="flex items-end gap-2">
+                <button @click="resetFilters()" class="h-9 rounded border border-slate-300 bg-white px-3 text-sm hover:bg-slate-50">重置</button>
+                <button @click="toast('已按当前条件查询')" class="h-9 rounded bg-blue-600 px-3 text-sm text-white hover:bg-blue-700">查询</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="rounded border border-slate-200 bg-white shadow-sm">
+            <div class="flex items-center border-b border-slate-200 px-4 py-3">
+              <div>
+                <h2 class="text-base font-semibold text-slate-800">任务清单 <span class="font-normal text-slate-500">共 <span x-text="filteredTasks().length"></span> 条</span></h2>
+                <p class="mt-0.5 text-xs text-slate-500">卡片信息包含创建人、负责人、成员角色、批次和初审状态。</p>
+              </div>
+              <div class="ml-auto flex gap-2">
+                <button @click="bulkMode = !bulkMode" class="rounded border border-slate-300 px-3 py-1.5 text-sm hover:bg-slate-50">
+                  <i class="fa-regular fa-square-check mr-1"></i>批量选择
+                </button>
+                <button @click="toast('批量导出任务包')" class="rounded border border-slate-300 px-3 py-1.5 text-sm hover:bg-slate-50">批量导出</button>
+              </div>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full border-collapse text-sm">
+                <thead class="bg-slate-50 text-xs uppercase text-slate-500">
+                  <tr>
+                    <th class="border border-slate-200 px-3 py-2 text-left" x-show="bulkMode">选择</th>
+                    <th class="border border-slate-200 px-3 py-2 text-left">任务信息</th>
+                    <th class="border border-slate-200 px-3 py-2 text-left">成员角色</th>
+                    <th class="border border-slate-200 px-3 py-2 text-left">批次与上传</th>
+                    <th class="border border-slate-200 px-3 py-2 text-left">Pipeline</th>
+                    <th class="border border-slate-200 px-3 py-2 text-left">状态</th>
+                    <th class="border border-slate-200 px-3 py-2 text-right">操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <template x-for="task in filteredTasks()" :key="task.id">
+                    <tr class="border-b border-slate-200 even:bg-slate-50 hover:bg-blue-50/50">
+                      <td class="border border-slate-200 px-3 py-3" x-show="bulkMode">
+                        <input type="checkbox" class="rounded border-slate-300" />
+                      </td>
+                      <td class="border border-slate-200 px-3 py-3 align-top">
+                        <div class="flex items-start gap-2">
+                          <span :class="typeClass(task.type)" class="mt-0.5 rounded px-2 py-0.5 text-xs font-medium" x-text="task.type"></span>
+                          <div>
+                            <button @click="openDetail(task)" class="font-medium text-blue-700 hover:text-blue-800" x-text="task.name"></button>
+                            <div class="mt-1 max-w-md truncate text-xs text-slate-500" x-text="task.desc"></div>
+                            <div class="mt-2 flex gap-3 text-xs text-slate-500">
+                              <span>创建人：<b class="font-medium text-slate-600" x-text="task.creator"></b></span>
+                              <span>截止：<b class="font-medium text-slate-600" x-text="task.due"></b></span>
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                      <td class="border border-slate-200 px-3 py-3 align-top">
+                        <div class="text-xs text-slate-600">负责人：<span class="font-medium" x-text="task.owner"></span></div>
+                        <div class="mt-1 flex flex-wrap gap-1">
+                          <template x-for="member in task.members" :key="member.name">
+                            <span class="rounded bg-slate-100 px-2 py-1 text-xs text-slate-600" x-text="member.name + ' / ' + member.role"></span>
+                          </template>
+                        </div>
+                      </td>
+                      <td class="border border-slate-200 px-3 py-3 align-top">
+                        <div class="text-xs text-slate-600">批次：<span class="font-semibold text-slate-800" x-text="task.batches"></span></div>
+                        <div class="mt-1 text-xs text-slate-600">已上传：<span class="font-semibold text-slate-800" x-text="task.uploads"></span> 份</div>
+                        <div class="mt-1 text-xs text-slate-500" x-text="task.batchNote"></div>
+                      </td>
+                      <td class="border border-slate-200 px-3 py-3 align-top">
+                        <div class="flex items-center gap-1 text-xs">
+                          <span class="h-2 w-2 rounded-full" :class="task.pipelineWarn ? 'bg-amber-500' : 'bg-green-500'"></span>
+                          <span x-text="task.pipeline"></span>
+                        </div>
+                        <button @click="openPipeline(task)" class="mt-1 text-xs text-blue-600 hover:text-blue-800">查看流程</button>
+                      </td>
+                      <td class="border border-slate-200 px-3 py-3 align-top">
+                        <span :class="statusClass(task.status)" class="inline-flex rounded-full px-2 py-1 text-xs font-medium" x-text="task.status"></span>
+                        <div class="mt-1 text-xs text-slate-500" x-text="task.review"></div>
+                      </td>
+                      <td class="border border-slate-200 px-3 py-3 text-right align-top">
+                        <button @click="openDetail(task)" class="mr-2 text-blue-600 hover:text-blue-800">详情</button>
+                        <button @click="openTaskModal('edit', task)" class="mr-2 text-blue-600 hover:text-blue-800">修改</button>
+                        <button @click="openReview(task)" class="mr-2 text-emerald-600 hover:text-emerald-700">初审</button>
+                        <button @click="startDelete(task)" class="text-red-600 hover:text-red-700">删除</button>
+                      </td>
+                    </tr>
+                  </template>
+                </tbody>
+              </table>
+            </div>
+            <div class="flex items-center justify-end gap-2 border-t border-slate-200 px-4 py-3 text-sm text-slate-600">
+              <span>共 <span x-text="filteredTasks().length"></span> 条数据</span>
+              <button class="rounded border border-slate-300 px-2 py-1 hover:bg-slate-50">上一页</button>
+              <button class="rounded bg-blue-600 px-2.5 py-1 text-white">1</button>
+              <button class="rounded border border-slate-300 px-2 py-1 hover:bg-slate-50">下一页</button>
+            </div>
+          </div>
+        </section>
+
+        <section x-show="view === 'detail'" x-cloak>
+          <div class="mb-4 flex items-start justify-between">
+            <div>
+              <h1 class="text-xl font-semibold text-slate-800">批次详情</h1>
+              <p class="mt-1 text-sm text-slate-500">任务内不同批次可收集不同内容，并记录上传、修订、审核和 Pipeline 处理状态。</p>
+            </div>
+            <button @click="setView('tasks')" class="rounded border border-slate-300 bg-white px-3 py-2 text-sm hover:bg-slate-50">返回任务列表</button>
+          </div>
+
+          <div class="mb-4 rounded border border-slate-200 bg-white p-4 shadow-sm">
+            <div class="flex items-start justify-between">
+              <div>
+                <div class="flex items-center gap-2">
+                  <span :class="typeClass(selectedTask.type)" class="rounded px-2 py-0.5 text-xs font-medium" x-text="selectedTask.type"></span>
+                  <h2 class="text-lg font-semibold text-slate-800" x-text="selectedTask.name"></h2>
+                </div>
+                <p class="mt-2 max-w-3xl text-sm text-slate-600" x-text="selectedTask.desc"></p>
+                <div class="mt-3 flex flex-wrap gap-3 text-xs text-slate-500">
+                  <span>创建人：<b class="text-slate-700" x-text="selectedTask.creator"></b></span>
+                  <span>负责人：<b class="text-slate-700" x-text="selectedTask.owner"></b></span>
+                  <span>截止期限：<b class="text-slate-700" x-text="selectedTask.due"></b></span>
+                  <span>上传内容：<b class="text-slate-700" x-text="selectedTask.uploads + ' 份'"></b></span>
+                </div>
+              </div>
+              <div class="flex gap-2">
+                <button @click="toast('已创建新批次草稿')" class="rounded bg-blue-600 px-3 py-2 text-sm text-white hover:bg-blue-700">新增批次</button>
+                <button @click="openPipeline(selectedTask)" class="rounded border border-slate-300 px-3 py-2 text-sm hover:bg-slate-50">编辑 Pipeline</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-[1.35fr_1fr] gap-4">
+            <div class="rounded border border-slate-200 bg-white shadow-sm">
+              <div class="flex items-center justify-between border-b border-slate-200 px-4 py-3">
+                <h2 class="text-base font-semibold">批次列表</h2>
+                <span class="text-xs text-slate-500">允许初审、修订、再次上传；驳回后禁止再上传。</span>
+              </div>
+              <div class="overflow-x-auto">
+                <table class="w-full border-collapse text-sm">
+                  <thead class="bg-slate-50 text-xs text-slate-500">
+                    <tr>
+                      <th class="border border-slate-200 px-3 py-2 text-left">批次</th>
+                      <th class="border border-slate-200 px-3 py-2 text-left">收集内容</th>
+                      <th class="border border-slate-200 px-3 py-2 text-left">协作成员</th>
+                      <th class="border border-slate-200 px-3 py-2 text-left">审核轮次</th>
+                      <th class="border border-slate-200 px-3 py-2 text-left">状态</th>
+                      <th class="border border-slate-200 px-3 py-2 text-right">操作</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <template x-for="batch in batches" :key="batch.id">
+                      <tr class="border-b border-slate-200 even:bg-slate-50 hover:bg-blue-50/50">
+                        <td class="border border-slate-200 px-3 py-3">
+                          <div class="font-medium text-slate-800" x-text="batch.name"></div>
+                          <div class="mt-1 text-xs text-slate-500" x-text="batch.time"></div>
+                        </td>
+                        <td class="border border-slate-200 px-3 py-3">
+                          <div x-text="batch.content"></div>
+                          <div class="mt-1 text-xs text-slate-500" x-text="batch.note"></div>
+                        </td>
+                        <td class="border border-slate-200 px-3 py-3" x-text="batch.members"></td>
+                        <td class="border border-slate-200 px-3 py-3" x-text="batch.rounds"></td>
+                        <td class="border border-slate-200 px-3 py-3">
+                          <span :class="statusClass(batch.status)" class="rounded-full px-2 py-1 text-xs font-medium" x-text="batch.status"></span>
+                        </td>
+                        <td class="border border-slate-200 px-3 py-3 text-right">
+                          <button @click="toast(batch.status === '已驳回' ? '该批次已驳回，禁止再次上传' : '进入上传/修订演示')" class="mr-2 text-blue-600 hover:text-blue-800">上传</button>
+                          <button @click="setView('review')" class="text-emerald-600 hover:text-emerald-700">初审</button>
+                        </td>
+                      </tr>
+                    </template>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="rounded border border-slate-200 bg-white shadow-sm">
+              <div class="flex items-center justify-between border-b border-slate-200 px-4 py-3">
+                <h2 class="text-base font-semibold">Pipeline 状态</h2>
+                <button @click="setView('pipeline')" class="text-sm text-blue-600 hover:text-blue-800">打开流程编排</button>
+              </div>
+              <div class="space-y-3 p-4">
+                <template x-for="node in pipelineNodes" :key="node.name">
+                  <div class="flex items-start gap-3 rounded border border-slate-200 p-3">
+                    <div :class="node.color" class="mt-1 flex h-8 w-8 items-center justify-center rounded text-white">
+                      <i :class="node.icon" class="text-xs"></i>
+                    </div>
+                    <div class="flex-1">
+                      <div class="flex items-center justify-between">
+                        <span class="font-medium text-slate-800" x-text="node.name"></span>
+                        <span class="text-xs text-slate-500" x-text="node.version"></span>
+                      </div>
+                      <p class="mt-1 text-xs text-slate-500" x-text="node.desc"></p>
+                      <div x-show="node.upgrade" class="mt-2 rounded bg-amber-50 px-2 py-1 text-xs text-amber-700">
+                        检测到新版本，发布前建议管理员确认算子升级影响。
+                      </div>
+                    </div>
+                  </div>
+                </template>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section x-show="view === 'review'" x-cloak>
+          <div class="mb-4 flex items-start justify-between">
+            <div>
+              <h1 class="text-xl font-semibold text-slate-800">语料确认初审</h1>
+              <p class="mt-1 text-sm text-slate-500">从任务列表或批次进入，根据类型展示不同初审内容；当前重点展示文本 OCR 页面对比。</p>
+            </div>
+            <div class="flex gap-2">
+              <button @click="toast('导入初审样例数据')" class="rounded border border-slate-300 bg-white px-3 py-2 text-sm hover:bg-slate-50">导入</button>
+              <button @click="toast('导出初审结果')" class="rounded border border-slate-300 bg-white px-3 py-2 text-sm hover:bg-slate-50">导出</button>
+            </div>
+          </div>
+
+          <div class="mb-4 rounded border border-slate-200 bg-white p-4 shadow-sm">
+            <div class="flex flex-wrap gap-2">
+              <template x-for="tab in reviewTabs" :key="tab">
+                <button @click="reviewTab = tab" :class="reviewTab === tab ? 'bg-blue-600 text-white' : 'border border-slate-300 bg-white text-slate-600 hover:bg-slate-50'" class="rounded px-3 py-1.5 text-sm" x-text="tab"></button>
+              </template>
+            </div>
+            <div class="mt-4 grid grid-cols-5 gap-3">
+              <input class="h-9 rounded border border-slate-300 px-3 text-sm" placeholder="任务名称 / 批次名称" />
+              <select class="h-9 rounded border border-slate-300 px-3 text-sm">
+                <option>全部审核状态</option>
+                <option>待审核</option>
+                <option>通过</option>
+                <option>需修订</option>
+                <option>驳回</option>
+              </select>
+              <select class="h-9 rounded border border-slate-300 px-3 text-sm">
+                <option>全部成员</option>
+                <option>李娜</option>
+                <option>王晓</option>
+                <option>赵磊</option>
+              </select>
+              <input class="h-9 rounded border border-slate-300 px-3 text-sm" placeholder="页码 / 文件名" />
+              <button @click="toast('已刷新初审列表')" class="h-9 rounded bg-blue-600 px-3 text-sm text-white">查询</button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-[330px_1fr] gap-4">
+            <div class="rounded border border-slate-200 bg-white shadow-sm">
+              <div class="border-b border-slate-200 px-4 py-3">
+                <h2 class="text-base font-semibold">待初审语料</h2>
+                <p class="mt-1 text-xs text-slate-500">按页处理文字稿，保留筛选、分页和审核动作。</p>
+              </div>
+              <div class="max-h-[620px] overflow-y-auto p-3 scroll-thin">
+                <template x-for="item in reviewItems" :key="item.id">
+                  <button @click="activeReview = item" :class="activeReview.id === item.id ? 'border-blue-400 bg-blue-50' : 'border-slate-200 bg-white hover:bg-slate-50'" class="mb-2 w-full rounded border p-3 text-left">
+                    <div class="flex items-center justify-between">
+                      <span class="font-medium text-slate-800" x-text="item.title"></span>
+                      <span :class="statusClass(item.status)" class="rounded-full px-2 py-0.5 text-xs" x-text="item.status"></span>
+                    </div>
+                    <div class="mt-1 text-xs text-slate-500" x-text="item.meta"></div>
+                    <div class="mt-2 flex justify-between text-xs text-slate-500">
+                      <span x-text="'页码：' + item.page"></span>
+                      <span x-text="'提交人：' + item.submitter"></span>
+                    </div>
+                  </button>
+                </template>
+              </div>
+              <div class="flex items-center justify-end gap-1 border-t border-slate-200 px-3 py-2 text-xs">
+                <button class="rounded border px-2 py-1">上一页</button>
+                <button class="rounded bg-blue-600 px-2 py-1 text-white">1</button>
+                <button class="rounded border px-2 py-1">下一页</button>
+              </div>
+            </div>
+
+            <div class="rounded border border-slate-200 bg-white shadow-sm">
+              <div class="flex items-center justify-between border-b border-slate-200 px-4 py-3">
+                <div>
+                  <h2 class="text-base font-semibold" x-text="reviewTab + '初审工作台'"></h2>
+                  <p class="mt-1 text-xs text-slate-500">原文与 OCR / 校对稿按页对比，审核人员填写结论和意见。</p>
+                </div>
+                <div class="flex gap-2">
+                  <button @click="setReviewResult('通过')" class="rounded bg-emerald-600 px-3 py-1.5 text-sm text-white">通过</button>
+                  <button @click="setReviewResult('需修订')" class="rounded bg-amber-500 px-3 py-1.5 text-sm text-white">需修订</button>
+                  <button @click="setReviewResult('驳回')" class="rounded bg-red-600 px-3 py-1.5 text-sm text-white">驳回</button>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-4 p-4">
+                <div class="rounded border border-slate-200">
+                  <div class="border-b border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium">原始页面 / 原文</div>
+                  <div class="min-h-[310px] p-4 text-sm leading-7 text-slate-700">
+                    <div class="mb-3 h-36 rounded border border-dashed border-slate-300 bg-slate-50 p-3 text-xs text-slate-500">
+                      文件预览区域：2024年华北强降水过程气象服务材料，第 <span x-text="activeReview.page"></span> 页。
+                    </div>
+                    <p>受冷涡系统和低层切变线共同影响，华北地区出现持续性降水过程。业务人员需补充过程起止时间、站点观测记录及预警发布情况。</p>
+                    <p class="mt-2">原文中存在扫描阴影、表格边界粘连和页脚水印，需要 OCR 后人工订正。</p>
+                  </div>
+                </div>
+                <div class="rounded border border-slate-200">
+                  <div class="border-b border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium">OCR 识别 / 校对稿</div>
+                  <textarea class="min-h-[390px] w-full resize-none border-0 p-4 text-sm leading-7 outline-none" x-model="activeReview.corrected"></textarea>
+                </div>
+              </div>
+
+              <div class="border-t border-slate-200 p-4">
+                <div class="grid grid-cols-[180px_1fr] gap-3">
+                  <label>
+                    <span class="mb-1 block text-sm text-slate-600">审核结论</span>
+                    <select x-model="reviewDecision" class="h-9 w-full rounded border border-slate-300 px-3 text-sm">
+                      <option>通过</option>
+                      <option>需修订</option>
+                      <option>驳回</option>
+                    </select>
+                  </label>
+                  <label>
+                    <span class="mb-1 block text-sm text-slate-600">审核意见</span>
+                    <input x-model="reviewComment" class="h-9 w-full rounded border border-slate-300 px-3 text-sm" placeholder="例如：第 3 段站点名称需与原图一致，表格标题需保留。" />
+                  </label>
+                </div>
+                <div class="mt-3 flex justify-end gap-2">
+                  <button @click="toast('已保存审核草稿')" class="rounded border border-slate-300 px-3 py-2 text-sm hover:bg-slate-50">保存草稿</button>
+                  <button @click="toast('审核结果已提交：' + reviewDecision)" class="rounded bg-blue-600 px-3 py-2 text-sm text-white hover:bg-blue-700">提交审核</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section x-show="view === 'pipeline'" x-cloak>
+          <div class="mb-4 flex items-start justify-between">
+            <div>
+              <h1 class="text-xl font-semibold text-slate-800">Pipeline / 算子管理</h1>
+              <p class="mt-1 text-sm text-slate-500">一期仅演示批次处理链路、算子版本提醒和发布状态，不包含算子开发工序。</p>
+            </div>
+            <div class="flex gap-2">
+              <button @click="toast('算子 Python 文件上传演示')" class="rounded border border-slate-300 bg-white px-3 py-2 text-sm hover:bg-slate-50">上传算子</button>
+              <button @click="toast('Pipeline 已发布演示')" class="rounded bg-blue-600 px-3 py-2 text-sm text-white hover:bg-blue-700">发布 Pipeline</button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-[260px_1fr_300px] gap-4">
+            <div class="rounded border border-slate-200 bg-white shadow-sm">
+              <div class="border-b border-slate-200 px-4 py-3">
+                <h2 class="text-base font-semibold">算子库</h2>
+                <p class="mt-1 text-xs text-slate-500">已使用的算子不能删除。</p>
+              </div>
+              <div class="space-y-2 p-3">
+                <template x-for="op in operators" :key="op.name">
+                  <div class="rounded border border-slate-200 p-3">
+                    <div class="flex items-center justify-between">
+                      <span class="font-medium" x-text="op.name"></span>
+                      <span class="rounded bg-slate-100 px-2 py-0.5 text-xs text-slate-600" x-text="op.version"></span>
+                    </div>
+                    <p class="mt-1 text-xs text-slate-500" x-text="op.desc"></p>
+                    <div class="mt-2 flex justify-between text-xs">
+                      <span :class="op.used ? 'text-amber-600' : 'text-slate-500'" x-text="op.used ? '已被流程使用' : '未使用'"></span>
+                      <button @click="toast(op.used ? '已使用算子不能删除' : '删除算子演示')" class="text-red-600">删除</button>
+                    </div>
+                  </div>
+                </template>
+              </div>
+            </div>
+
+            <div class="min-h-[620px] rounded border border-slate-200 bg-white shadow-sm">
+              <div class="flex items-center justify-between border-b border-slate-200 px-4 py-3">
+                <h2 class="text-base font-semibold">流程编排画布</h2>
+                <span class="text-xs text-slate-500">拖拽式类图形化界面示意</span>
+              </div>
+              <div class="grid-canvas relative h-[560px] overflow-hidden">
+                <svg class="absolute inset-0 h-full w-full">
+                  <defs>
+                    <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+                      <path d="M0,0 L8,4 L0,8 z" fill="#64748b"></path>
+                    </marker>
+                  </defs>
+                  <path d="M170 110 C250 110, 250 210, 330 210" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)" />
+                  <path d="M500 210 C570 210, 570 330, 650 330" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)" />
+                  <path d="M820 330 C880 330, 880 430, 940 430" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)" />
+                </svg>
+
+                <div class="absolute left-10 top-16 w-40 rounded border border-blue-300 bg-white p-3 shadow">
+                  <div class="text-sm font-semibold text-slate-800">文件接收</div>
+                  <div class="mt-1 text-xs text-slate-500">txt / doc / pdf / 图片</div>
+                  <span class="absolute -right-2 top-1/2 h-4 w-4 rounded-full border border-blue-300 bg-blue-50"></span>
+                </div>
+                <div class="absolute left-[330px] top-[170px] w-44 rounded border border-emerald-300 bg-white p-3 shadow">
+                  <div class="text-sm font-semibold text-slate-800">OCR 识别算子</div>
+                  <div class="mt-1 text-xs text-slate-500">v2.1.0 已发布</div>
+                  <span class="absolute -left-2 top-1/2 h-4 w-4 rounded-full border border-emerald-300 bg-emerald-50"></span>
+                  <span class="absolute -right-2 top-1/2 h-4 w-4 rounded-full border border-emerald-300 bg-emerald-50"></span>
+                </div>
+                <div class="absolute left-[650px] top-[290px] w-44 rounded border border-amber-300 bg-white p-3 shadow">
+                  <div class="text-sm font-semibold text-slate-800">相似性分析</div>
+                  <div class="mt-1 text-xs text-amber-600">发现 v1.4.0 新版本</div>
+                  <span class="absolute -left-2 top-1/2 h-4 w-4 rounded-full border border-amber-300 bg-amber-50"></span>
+                  <span class="absolute -right-2 top-1/2 h-4 w-4 rounded-full border border-amber-300 bg-amber-50"></span>
+                </div>
+                <div class="absolute left-[940px] top-[390px] w-44 rounded border border-slate-300 bg-white p-3 shadow">
+                  <div class="text-sm font-semibold text-slate-800">初审队列</div>
+                  <div class="mt-1 text-xs text-slate-500">按页生成确认任务</div>
+                  <span class="absolute -left-2 top-1/2 h-4 w-4 rounded-full border border-slate-300 bg-slate-50"></span>
+                </div>
+              </div>
+            </div>
+
+            <div class="rounded border border-slate-200 bg-white shadow-sm">
+              <div class="border-b border-slate-200 px-4 py-3">
+                <h2 class="text-base font-semibold">流程发布检查</h2>
+              </div>
+              <div class="space-y-3 p-4 text-sm">
+                <div class="rounded bg-green-50 p-3 text-green-700">去重算子已发布，可用于当前批次。</div>
+                <div class="rounded bg-amber-50 p-3 text-amber-700">相似性分析算子存在新版本，建议发布前确认升级。</div>
+                <div class="rounded bg-blue-50 p-3 text-blue-700">OCR 识别后将进入初审工作台进行按页对比。</div>
+                <div class="rounded bg-red-50 p-3 text-red-700">已使用算子不允许删除，只能新增版本。</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section x-show="view === 'annotation'" x-cloak>
+          <div class="rounded border border-slate-200 bg-white p-8 text-center shadow-sm">
+            <i class="fa-solid fa-tags text-3xl text-slate-300"></i>
+            <h1 class="mt-3 text-xl font-semibold text-slate-800">标注管理</h1>
+            <p class="mx-auto mt-2 max-w-xl text-sm text-slate-500">一期仅保留菜单入口，后续扩展标注任务、标注审核、标注统计等页面。当前原型重点完成语料任务、批次、Pipeline 与初审流程。</p>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div x-show="taskModalOpen" x-cloak class="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/40 p-4">
+      <div @click.outside="taskModalOpen = false" class="w-[760px] rounded bg-white shadow-2xl">
+        <div class="flex items-center justify-between border-b border-slate-200 px-5 py-4">
+          <h2 class="text-base font-semibold" x-text="modalMode === 'create' ? '新建语料任务' : '修改语料任务'"></h2>
+          <button @click="taskModalOpen = false" class="text-slate-400 hover:text-slate-700"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="max-h-[72vh] overflow-y-auto p-5 scroll-thin">
+          <div class="mb-4 rounded bg-blue-50 px-3 py-2 text-sm text-blue-700">支持示例填充，创建成功后回到任务列表；修改任务时表单回填并可再次保存。</div>
+          <div class="grid grid-cols-2 gap-4">
+            <label class="text-sm">
+              <span class="mb-1 block text-slate-600">任务名称</span>
+              <input x-model="taskForm.name" class="h-9 w-full rounded border border-slate-300 px-3" />
+            </label>
+            <label class="text-sm">
+              <span class="mb-1 block text-slate-600">任务类型</span>
+              <select x-model="taskForm.type" class="h-9 w-full rounded border border-slate-300 px-3">
+                <option>文本</option>
+                <option>图片</option>
+                <option>视频</option>
+                <option>混合</option>
+              </select>
+            </label>
+            <label class="col-span-2 text-sm">
+              <span class="mb-1 block text-slate-600">任务描述</span>
+              <textarea x-model="taskForm.desc" class="h-24 w-full resize-none rounded border border-slate-300 px-3 py-2"></textarea>
+            </label>
+            <label class="text-sm">
+              <span class="mb-1 block text-slate-600">负责人</span>
+              <select x-model="taskForm.owner" class="h-9 w-full rounded border border-slate-300 px-3">
+                <option>张婧</option>
+                <option>刘晨</option>
+                <option>周明</option>
+              </select>
+            </label>
+            <label class="text-sm">
+              <span class="mb-1 block text-slate-600">截止期限</span>
+              <input x-model="taskForm.due" type="date" class="h-9 w-full rounded border border-slate-300 px-3" />
+            </label>
+          </div>
+
+          <div class="mt-5 rounded border border-slate-200">
+            <div class="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-3 py-2">
+              <span class="text-sm font-medium">任务成员与任务内角色</span>
+              <button @click="addMember()" class="text-sm text-blue-600">添加成员</button>
+            </div>
+            <div class="divide-y divide-slate-200">
+              <template x-for="(member, index) in taskForm.members" :key="index">
+                <div class="grid grid-cols-[1fr_1fr_80px] gap-3 p-3">
+                  <input x-model="member.name" class="h-9 rounded border border-slate-300 px-3 text-sm" placeholder="成员姓名" />
+                  <select x-model="member.role" class="h-9 rounded border border-slate-300 px-3 text-sm">
+                    <option>采集员</option>
+                    <option>初审员</option>
+                    <option>订正员</option>
+                    <option>负责人</option>
+                  </select>
+                  <button @click="taskForm.members.splice(index, 1)" class="text-sm text-red-600">删除</button>
+                </div>
+              </template>
+            </div>
+          </div>
+        </div>
+        <div class="flex justify-between border-t border-slate-200 px-5 py-4">
+          <button @click="fillExample()" class="rounded border border-slate-300 px-3 py-2 text-sm hover:bg-slate-50">填充真实示例</button>
+          <div class="flex gap-2">
+            <button @click="taskModalOpen = false" class="rounded border border-slate-300 px-3 py-2 text-sm hover:bg-slate-50">取消</button>
+            <button @click="saveTask()" class="rounded bg-blue-600 px-3 py-2 text-sm text-white hover:bg-blue-700">保存任务</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div x-show="deleteModalOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4">
+      <div @click.outside="deleteModalOpen = false" class="w-[520px] rounded bg-white shadow-2xl">
+        <div class="border-b border-red-100 bg-red-50 px-5 py-4">
+          <h2 class="text-base font-semibold text-red-700">删除任务强制提醒</h2>
+          <p class="mt-1 text-sm text-red-600">删除任务将影响任务、批次、上传内容和初审记录。</p>
+        </div>
+        <div class="p-5">
+          <p class="text-sm text-slate-700">即将删除：<b x-text="deleteTarget?.name"></b></p>
+          <div x-show="deleteTarget?.uploads > 0" class="mt-3 rounded bg-amber-50 p-3 text-sm text-amber-700">
+            该任务已包含上传内容，需要完成两次确认才能删除。当前确认进度：<span x-text="deleteStep"></span> / 2
+          </div>
+          <div class="mt-4 rounded border border-slate-200 p-3 text-sm text-slate-600">
+            请确认：删除后任务列表不再展示该任务，已上传语料和审核链路在真实系统中可能不可恢复。
+          </div>
+        </div>
+        <div class="flex justify-end gap-2 border-t border-slate-200 px-5 py-4">
+          <button @click="deleteModalOpen = false" class="rounded border border-slate-300 px-3 py-2 text-sm hover:bg-slate-50">取消</button>
+          <button @click="confirmDelete()" class="rounded bg-red-600 px-3 py-2 text-sm text-white hover:bg-red-700">
+            <span x-text="deleteTarget?.uploads > 0 && deleteStep === 1 ? '第一次确认' : '删除任务'"></span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div x-show="toastMessage" x-cloak class="fixed bottom-5 right-5 z-50 rounded bg-slate-900 px-4 py-3 text-sm text-white shadow-lg" x-text="toastMessage"></div>
+  </div>
+
+  <script>
+    function huafengPrototype() {
+      return {
+        view: 'tasks',
+        pageTitle: '语料任务列表',
+        bulkMode: false,
+        taskModalOpen: false,
+        deleteModalOpen: false,
+        deleteTarget: null,
+        deleteStep: 1,
+        modalMode: 'create',
+        toastMessage: '',
+        reviewTab: '文本',
+        reviewDecision: '通过',
+        reviewComment: '',
+        filters: { keyword: '', type: '', status: '', owner: '' },
+        taskForm: {},
+        selectedTask: {},
+        activeReview: {},
+        stats: [
+          { label: '语料任务', value: 18, trend: '+4 本周', trendClass: 'text-emerald-600', icon: 'fa-solid fa-folder-open' },
+          { label: '待初审批次', value: 9, trend: '+2 今日', trendClass: 'text-amber-600', icon: 'fa-solid fa-clipboard-check' },
+          { label: '修订中内容', value: 126, trend: '-8%', trendClass: 'text-blue-600', icon: 'fa-solid fa-pen-to-square' },
+          { label: '风险驳回', value: 3, trend: '需关注', trendClass: 'text-red-600', icon: 'fa-solid fa-triangle-exclamation' }
+        ],
+        tasks: [
+          {
+            id: 1,
+            name: '华北强降水过程原始语料收集',
+            type: '文本',
+            creator: '系统管理员',
+            owner: '张婧',
+            due: '2026-06-15',
+            status: '待初审',
+            desc: '收集华北区域强降水天气过程相关文字材料、扫描 PDF、doc 文档和站点观测表，进入 OCR 识别和人工订正流程。',
+            members: [{ name: '李娜', role: '采集员' }, { name: '王晓', role: '初审员' }, { name: '赵磊', role: '订正员' }],
+            batches: 4,
+            uploads: 248,
+            batchNote: '含 PDF 扫描件与 doc 文档',
+            pipeline: 'OCR -> 订正 -> 相似性分析',
+            pipelineWarn: true,
+            review: '3 个批次待确认'
+          },
+          {
+            id: 2,
+            name: '台风路径图像语料补充任务',
+            type: '图片',
+            creator: '刘晨',
+            owner: '刘晨',
+            due: '2026-06-20',
+            status: '执行中',
+            desc: '补充台风路径预报图、雷达回波图和卫星云图素材，用于后续图像描述和图文配对标注。',
+            members: [{ name: '陈一', role: '采集员' }, { name: '孙琪', role: '负责人' }],
+            batches: 3,
+            uploads: 86,
+            batchNote: '图片缩略图待补充描述',
+            pipeline: '去重 -> 清晰度检测 -> 入库',
+            pipelineWarn: false,
+            review: '首批采集中'
+          },
+          {
+            id: 3,
+            name: '短临预报视频片段整理',
+            type: '视频',
+            creator: '周明',
+            owner: '周明',
+            due: '2026-06-28',
+            status: '修订中',
+            desc: '整理短临预报播报视频、天气过程动画和图生视频指令记录，要求保留源图帧与视频预览。',
+            members: [{ name: '高远', role: '采集员' }, { name: '钱佳', role: '初审员' }],
+            batches: 2,
+            uploads: 42,
+            batchNote: '视频指令正在补录',
+            pipeline: '抽帧 -> 相似性分析 -> 初审',
+            pipelineWarn: true,
+            review: '需修订 12 条'
+          },
+          {
+            id: 4,
+            name: '气象服务问答对一期补录',
+            type: '混合',
+            creator: '张婧',
+            owner: '张婧',
+            due: '2026-07-05',
+            status: '已驳回',
+            desc: '从历史服务材料中整理问答对、知识片段和补充说明，部分扫描页 OCR 质量不达标。',
+            members: [{ name: '李娜', role: '采集员' }, { name: '许然', role: '初审员' }],
+            batches: 5,
+            uploads: 190,
+            batchNote: '驳回后禁止再次上传',
+            pipeline: 'OCR -> 去重 -> 订正',
+            pipelineWarn: false,
+            review: '已驳回'
+          },
+          {
+            id: 5,
+            name: '农业气象旬报文本录入',
+            type: '文本',
+            creator: '王晓',
+            owner: '刘晨',
+            due: '2026-07-10',
+            status: '已完成',
+            desc: '按模板录入农业气象旬报文本，包括地区、作物、天气影响和服务建议字段。',
+            members: [{ name: '赵磊', role: '采集员' }, { name: '陈一', role: '订正员' }],
+            batches: 1,
+            uploads: 76,
+            batchNote: '模板录入已完成',
+            pipeline: '模板校验 -> 入库',
+            pipelineWarn: false,
+            review: '全部通过'
+          }
+        ],
+        batches: [
+          { id: 1, name: '批次 A-扫描 PDF', time: '2026-05-18 10:30', content: 'PDF / doc / 图片 OCR', note: '需要按页初审', members: '李娜、王晓、赵磊', rounds: '上传 2 次 / 初审 1 次', status: '待初审' },
+          { id: 2, name: '批次 B-人工录入', time: '2026-05-20 16:12', content: '文本模板录入', note: '多人共同完成', members: '李娜、陈一', rounds: '上传 1 次 / 修订 1 次', status: '修订中' },
+          { id: 3, name: '批次 C-补充图件', time: '2026-05-22 09:40', content: '图片 / 图文描述', note: '用于文生图描述', members: '孙琪、许然', rounds: '上传 1 次', status: '执行中' },
+          { id: 4, name: '批次 D-低质扫描件', time: '2026-05-24 14:05', content: 'PDF 扫描件', note: 'OCR 质量不达标', members: '高远、钱佳', rounds: '初审 2 次', status: '已驳回' }
+        ],
+        pipelineNodes: [
+          { name: '去重算子', version: 'v1.2.3', desc: '对上传语料标题、正文片段和文件摘要去重。', color: 'bg-blue-500', icon: 'fa-solid fa-copy', upgrade: false },
+          { name: 'OCR 识别算子', version: 'v2.1.0', desc: '识别图片、扫描 PDF 中的文字并按页输出。', color: 'bg-emerald-500', icon: 'fa-solid fa-eye', upgrade: false },
+          { name: '订正算子', version: 'v1.0.8', desc: '生成订正建议，供初审人员人工确认。', color: 'bg-indigo-500', icon: 'fa-solid fa-pen', upgrade: false },
+          { name: '相似性分析算子', version: 'v1.3.1', desc: '识别高度相似的文本页和图像素材。', color: 'bg-amber-500', icon: 'fa-solid fa-chart-network', upgrade: true }
+        ],
+        operators: [
+          { name: '去重算子', version: 'v1.2.3', desc: '文本、文件摘要和图片指纹去重。', used: true },
+          { name: 'OCR 识别算子', version: 'v2.1.0', desc: '扫描 PDF 和图片文字识别。', used: true },
+          { name: '订正算子', version: 'v1.0.8', desc: '输出可人工确认的订正建议。', used: true },
+          { name: '版式解析算子', version: 'v0.9.4', desc: '解析表格、页眉页脚和水印。', used: false }
+        ],
+        reviewTabs: ['知识库', '文本', '问答对', '文生图', '图生视频'],
+        reviewItems: [
+          { id: 1, title: '强降水过程材料 03 页', meta: '华北强降水过程原始语料收集 / 批次 A', page: '3 / 18', submitter: '李娜', status: '待初审', corrected: '受冷涡系统和低层切变线共同影响，华北地区出现持续性降水过程。业务人员需补充过程起止时间、站点观测记录及预警发布情况。' },
+          { id: 2, title: '站点观测表 07 页', meta: '华北强降水过程原始语料收集 / 批次 A', page: '7 / 18', submitter: '赵磊', status: '需修订', corrected: '站点观测记录显示，主要降水时段集中在夜间至次日凌晨，部分站点累计降水量达到暴雨量级。' },
+          { id: 3, title: '服务材料正文 11 页', meta: '农业气象旬报文本录入 / 批次 B', page: '11 / 26', submitter: '陈一', status: '通过', corrected: '本旬光温水条件总体适宜，建议加强低洼农田排涝和病虫害监测。' }
+        ],
+        init() {
+          this.selectedTask = this.tasks[0]
+          this.activeReview = this.reviewItems[0]
+          this.taskForm = this.emptyTaskForm()
+        },
+        setView(name) {
+          this.view = name
+          const titles = { tasks: '语料任务列表', detail: '批次详情', review: '语料确认初审', pipeline: 'Pipeline / 算子', annotation: '标注管理' }
+          this.pageTitle = titles[name]
+        },
+        navClass(name) {
+          return (name === 'annotation' && this.view === 'annotation') || (name === 'tasks' && this.view !== 'annotation')
+            ? 'bg-blue-600 text-white'
+            : 'text-slate-300 hover:bg-slate-700 hover:text-white'
+        },
+        subNavClass(name) {
+          return this.view === name ? 'bg-slate-700 text-white' : 'text-slate-300 hover:bg-slate-700 hover:text-white'
+        },
+        filteredTasks() {
+          const keyword = this.filters.keyword.trim().toLowerCase()
+          return this.tasks.filter(task => {
+            const byKeyword = !keyword || task.name.toLowerCase().includes(keyword) || task.desc.toLowerCase().includes(keyword)
+            const byType = !this.filters.type || task.type === this.filters.type
+            const byStatus = !this.filters.status || task.status === this.filters.status
+            const byOwner = !this.filters.owner || task.owner === this.filters.owner
+            return byKeyword && byType && byStatus && byOwner
+          })
+        },
+        resetFilters() {
+          this.filters = { keyword: '', type: '', status: '', owner: '' }
+        },
+        typeClass(type) {
+          return {
+            '文本': 'bg-blue-100 text-blue-700',
+            '图片': 'bg-emerald-100 text-emerald-700',
+            '视频': 'bg-violet-100 text-violet-700',
+            '混合': 'bg-amber-100 text-amber-700'
+          }[type] || 'bg-slate-100 text-slate-700'
+        },
+        statusClass(status) {
+          return {
+            '执行中': 'bg-blue-100 text-blue-700',
+            '待初审': 'bg-amber-100 text-amber-700',
+            '修订中': 'bg-indigo-100 text-indigo-700',
+            '已驳回': 'bg-red-100 text-red-700',
+            '已完成': 'bg-emerald-100 text-emerald-700',
+            '通过': 'bg-emerald-100 text-emerald-700',
+            '需修订': 'bg-amber-100 text-amber-700'
+          }[status] || 'bg-slate-100 text-slate-700'
+        },
+        openDetail(task) {
+          this.selectedTask = task
+          this.setView('detail')
+        },
+        openPipeline(task) {
+          this.selectedTask = task
+          this.setView('pipeline')
+        },
+        openReview(task) {
+          this.selectedTask = task
+          this.setView('review')
+        },
+        emptyTaskForm() {
+          return {
+            name: '',
+            type: '文本',
+            desc: '',
+            owner: '张婧',
+            due: '2026-06-30',
+            members: [
+              { name: '李娜', role: '采集员' },
+              { name: '王晓', role: '初审员' }
+            ]
+          }
+        },
+        openTaskModal(mode, task = null) {
+          this.modalMode = mode
+          if (mode === 'edit' && task) {
+            this.taskForm = JSON.parse(JSON.stringify({
+              id: task.id,
+              name: task.name,
+              type: task.type,
+              desc: task.desc,
+              owner: task.owner,
+              due: task.due,
+              members: task.members
+            }))
+          } else {
+            this.taskForm = this.emptyTaskForm()
+          }
+          this.taskModalOpen = true
+        },
+        addMember() {
+          this.taskForm.members.push({ name: '', role: '采集员' })
+        },
+        fillExample() {
+          this.taskForm = {
+            name: '气象灾害预警服务材料语料收集',
+            type: '文本',
+            desc: '收集暴雨、大风、强对流等预警服务材料，包含 doc、pdf、图片扫描件和人工录入文本，供后续 OCR、订正和初审使用。',
+            owner: '张婧',
+            due: '2026-07-12',
+            members: [
+              { name: '李娜', role: '采集员' },
+              { name: '王晓', role: '初审员' },
+              { name: '赵磊', role: '订正员' }
+            ]
+          }
+        },
+        saveTask() {
+          if (this.modalMode === 'edit') {
+            const index = this.tasks.findIndex(task => task.id === this.taskForm.id)
+            if (index > -1) {
+              this.tasks[index] = { ...this.tasks[index], ...this.taskForm }
+            }
+            this.toast('任务修改已保存')
+          } else {
+            this.tasks.unshift({
+              ...this.taskForm,
+              id: Date.now(),
+              creator: '演示管理员',
+              status: '执行中',
+              batches: 0,
+              uploads: 0,
+              batchNote: '尚未创建批次',
+              pipeline: '待配置',
+              pipelineWarn: false,
+              review: '暂无初审'
+            })
+            this.toast('任务创建成功，已回到任务列表')
+          }
+          this.taskModalOpen = false
+          this.setView('tasks')
+        },
+        startDelete(task) {
+          this.deleteTarget = task
+          this.deleteStep = 1
+          this.deleteModalOpen = true
+        },
+        confirmDelete() {
+          if (this.deleteTarget.uploads > 0 && this.deleteStep === 1) {
+            this.deleteStep = 2
+            this.toast('请进行第二次确认')
+            return
+          }
+          this.tasks = this.tasks.filter(task => task.id !== this.deleteTarget.id)
+          this.deleteModalOpen = false
+          this.toast('任务已删除')
+        },
+        setReviewResult(result) {
+          this.reviewDecision = result
+          this.reviewComment = result === '通过' ? '内容与原文一致，允许进入后续整理。' : result === '需修订' ? '请按页修订 OCR 识别错误后再次提交。' : '该页质量不满足入库要求，驳回后禁止再次上传。'
+        },
+        toast(message) {
+          this.toastMessage = message
+          clearTimeout(this.toastTimer)
+          this.toastTimer = setTimeout(() => { this.toastMessage = '' }, 2200)
+        }
+      }
+    }
+  </script>
+</body>
+</html>
