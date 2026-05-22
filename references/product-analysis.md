@@ -13,6 +13,7 @@ Extract these items from the user's words:
 - **Core actions**: Search, create, edit, approve, publish, assign, enable/disable, import/export, monitor, process, rollback, delete.
 - **Risk level**: Low-risk browsing, medium-risk editing, high-risk irreversible operations.
 - **Output expectation**: Prototype description, page spec, wireframe-level HTML/React, interaction flow, or design review.
+- **Lifecycle depth**: Whether the object has batches, uploads, file parsing, revisions, version diffs, review loops, locks, or downstream handoff.
 
 ## Intent Questions
 
@@ -35,7 +36,12 @@ Use this compact structure when reasoning:
   "target_users": [],
   "business_goal": "",
   "core_objects": [],
+  "object_hierarchy": [],
   "core_actions": [],
+  "workflow_steps": [],
+  "content_types": [],
+  "version_rules": [],
+  "review_states": [],
   "page_scope": [],
   "critical_flows": [],
   "risk_points": [],
@@ -47,11 +53,13 @@ Use this compact structure when reasoning:
 
 - Users of admin systems usually want to finish work, not explore.
 - A page exists only if it supports a real task, status judgment, or decision.
+- Complex work should be decomposed by lifecycle before pages are named.
 - The dashboard should answer: "What is happening, what needs attention, where do I go next?"
 - A list page should answer: "How do I find the right record and act on it?"
 - A detail page should answer: "What is the full context and history?"
 - A form page should answer: "What do I need to enter, what is required, and what happens after saving?"
 - A wizard should be used when the user must complete dependent steps or many fields.
+- A review page should answer: "What changed, which version is affected, what decision is allowed, and what happens next?"
 - High-risk actions need stronger confirmation and clearer consequences.
 
 ## Assumption Handling
@@ -75,5 +83,7 @@ If the user says the prototype is not right, check these causes:
 - Wrong task priority: Emphasized statistics, but user needs fast processing.
 - Wrong density: Too sparse for operations or too dense for executives.
 - Missing object lifecycle: No path from create to review to publish/archive.
+- Missing sub-object hierarchy: Batch, file, page, row, segment, or version was flattened away.
+- Missing version chain: Revision changes are not visible or review cannot target a version.
 - Missing risk handling: Delete, overwrite, disable, or approve lacks confirmation.
 - Wrong deliverable: User wanted runnable prototype, but got only text spec.

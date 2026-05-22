@@ -29,7 +29,8 @@
 └── references/
     ├── admin-ui-patterns.md
     ├── output-templates.md
-    └── product-analysis.md
+    ├── product-analysis.md
+    └── workflow-closure.md
 ```
 
 ## 文件说明
@@ -39,6 +40,7 @@
 - `references/product-analysis.md`：产品经理式需求分析方法。
 - `references/admin-ui-patterns.md`：后台管理系统常见页面与交互模式。
 - `references/output-templates.md`：需求理解、页面规划、PageSpec 和交互流程模板。
+- `references/workflow-closure.md`：任务、批次、文件上传、版本差异、审核闭环的分析方法。
 
 ## 使用方式
 

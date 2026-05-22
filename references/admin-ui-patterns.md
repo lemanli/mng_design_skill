@@ -65,6 +65,39 @@ Recommended modules:
 
 Detail pages should provide return, edit, delete/high-risk action, and next-step actions when applicable.
 
+## Batch / Subtask Workspace
+
+Use when a task contains multiple batches, collection requirements, or file/input groups.
+
+Recommended modules:
+
+- Requirement breakdown: what this batch must collect and acceptance rules.
+- Content type matrix: PDF, image, video, Excel, doc/docx, txt, manual input, QA pair, prompt/image pair.
+- File/record list: item name, type, owner, version, parsing status, review status, next action.
+- Version history: upload, revision, review, rejection, and pass records.
+- Action rules: upload, revise, submit review, view diff, lock, reopen when allowed.
+
+Do not hide batch lifecycle inside a single status column when users must revise or review content.
+
+## Document Review Workspace
+
+Use for PDF, image scan, OCR, Excel, and manually corrected content.
+
+Recommended layout:
+
+- Left panel: page thumbnails, sheet list, frame list, or row groups.
+- Center panel: original source preview. Simulate the PDF page/image/table when real files are not available.
+- Right panel: recognized content, corrected content, structured fields, or reviewer comments.
+- Bottom or side panel: version timeline and review actions.
+
+Required interaction details:
+
+- Highlight uncertain OCR content.
+- Highlight inserted, deleted, and modified text or cells.
+- Show previous version vs current version when revisions exist.
+- Bind review conclusion to page/row/file version, not only the whole task.
+- Lock edit/upload actions when content is rejected.
+
 ## Create / Edit Form
 
 Default goals:

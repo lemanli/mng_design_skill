@@ -61,6 +61,7 @@
         <div class="ml-5 border-l border-slate-600 pl-2">
           <button @click="setView('tasks')" :class="subNavClass('tasks')" class="mb-1 block w-full rounded px-3 py-1.5 text-left">语料任务列表</button>
           <button @click="setView('detail')" :class="subNavClass('detail')" class="mb-1 block w-full rounded px-3 py-1.5 text-left">批次详情</button>
+          <button @click="setView('file')" :class="subNavClass('file')" class="mb-1 block w-full rounded px-3 py-1.5 text-left">文件处理与版本</button>
           <button @click="setView('review')" :class="subNavClass('review')" class="mb-1 block w-full rounded px-3 py-1.5 text-left">语料确认初审</button>
           <button @click="setView('pipeline')" :class="subNavClass('pipeline')" class="mb-1 block w-full rounded px-3 py-1.5 text-left">Pipeline / 算子</button>
         </div>
@@ -96,6 +97,7 @@
         <div class="flex gap-2 text-xs">
           <span class="rounded border border-blue-200 bg-blue-50 px-3 py-1 text-blue-700">语料任务列表</span>
           <span class="rounded border border-slate-200 bg-slate-50 px-3 py-1 text-slate-500">批次详情</span>
+          <span class="rounded border border-slate-200 bg-slate-50 px-3 py-1 text-slate-500">文件处理与版本</span>
           <span class="rounded border border-slate-200 bg-slate-50 px-3 py-1 text-slate-500">语料确认初审</span>
         </div>
       </div>
@@ -298,6 +300,33 @@
             </div>
           </div>
 
+          <div class="mb-4 rounded border border-slate-200 bg-white shadow-sm">
+            <div class="flex items-center justify-between border-b border-slate-200 px-4 py-3">
+              <div>
+                <h2 class="text-base font-semibold">采集需求拆解</h2>
+                <p class="mt-1 text-xs text-slate-500">先看一个任务由哪些需求组成，再进入对应批次、内容类型、文件版本和初审动作。</p>
+              </div>
+              <span class="rounded bg-blue-50 px-2 py-1 text-xs text-blue-700">任务 → 需求 → 批次 → 文件/记录 → 页/行 → 版本 → 初审</span>
+            </div>
+            <div class="grid grid-cols-3 gap-3 p-4">
+              <template x-for="req in requirementGroups" :key="req.name">
+                <div class="rounded border border-slate-200 p-3">
+                  <div class="flex items-center justify-between">
+                    <span class="font-medium text-slate-800" x-text="req.name"></span>
+                    <span :class="statusClass(req.status)" class="rounded-full px-2 py-0.5 text-xs" x-text="req.status"></span>
+                  </div>
+                  <p class="mt-2 text-xs leading-5 text-slate-500" x-text="req.goal"></p>
+                  <div class="mt-3 flex flex-wrap gap-1">
+                    <template x-for="type in req.types" :key="type">
+                      <span class="rounded bg-slate-100 px-2 py-1 text-xs text-slate-600" x-text="type"></span>
+                    </template>
+                  </div>
+                  <div class="mt-3 text-xs text-slate-500">完成步骤：<span class="text-slate-700" x-text="req.steps"></span></div>
+                </div>
+              </template>
+            </div>
+          </div>
+
           <div class="grid grid-cols-[1.35fr_1fr] gap-4">
             <div class="rounded border border-slate-200 bg-white shadow-sm">
               <div class="flex items-center justify-between border-b border-slate-200 px-4 py-3">
@@ -334,6 +363,7 @@
                         </td>
                         <td class="border border-slate-200 px-3 py-3 text-right">
                           <button @click="toast(batch.status === '已驳回' ? '该批次已驳回，禁止再次上传' : '进入上传/修订演示')" class="mr-2 text-blue-600 hover:text-blue-800">上传</button>
+                          <button @click="setView('file')" class="mr-2 text-blue-600 hover:text-blue-800">文件处理</button>
                           <button @click="setView('review')" class="text-emerald-600 hover:text-emerald-700">初审</button>
                         </td>
                       </tr>
@@ -366,6 +396,150 @@
                     </div>
                   </div>
                 </template>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section x-show="view === 'file'" x-cloak>
+          <div class="mb-4 flex items-start justify-between">
+            <div>
+              <h1 class="text-xl font-semibold text-slate-800">文件处理与版本</h1>
+              <p class="mt-1 text-sm text-slate-500">面向 PDF、扫描图片、Excel 和手工录入的批次内容工作台，重点展示 PDF 原始页、OCR 识别页、修订高亮和版本差异。</p>
+            </div>
+            <div class="flex gap-2">
+              <button @click="setView('detail')" class="rounded border border-slate-300 bg-white px-3 py-2 text-sm hover:bg-slate-50">返回批次</button>
+              <button @click="toast('已基于当前修订生成 v4 版本')" class="rounded bg-blue-600 px-3 py-2 text-sm text-white hover:bg-blue-700">提交修订版本</button>
+            </div>
+          </div>
+
+          <div class="mb-4 grid grid-cols-4 gap-4">
+            <div class="rounded border border-slate-200 bg-white p-4 shadow-sm">
+              <div class="text-sm text-slate-500">当前批次</div>
+              <div class="mt-2 font-semibold text-slate-800">批次 A-扫描 PDF</div>
+              <div class="mt-1 text-xs text-slate-500">PDF / doc / 图片 OCR</div>
+            </div>
+            <div class="rounded border border-slate-200 bg-white p-4 shadow-sm">
+              <div class="text-sm text-slate-500">文件状态</div>
+              <div class="mt-2 font-semibold text-amber-700">待初审</div>
+              <div class="mt-1 text-xs text-slate-500">18 页，3 页存在高亮修订</div>
+            </div>
+            <div class="rounded border border-slate-200 bg-white p-4 shadow-sm">
+              <div class="text-sm text-slate-500">版本链</div>
+              <div class="mt-2 font-semibold text-slate-800">v1 → v2 → v3</div>
+              <div class="mt-1 text-xs text-slate-500">上传、OCR 订正、初审修订</div>
+            </div>
+            <div class="rounded border border-slate-200 bg-white p-4 shadow-sm">
+              <div class="text-sm text-slate-500">规则</div>
+              <div class="mt-2 font-semibold text-red-700">驳回后禁止再上传</div>
+              <div class="mt-1 text-xs text-slate-500">需修订才允许生成新版本</div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-[220px_1fr_1fr] gap-4">
+            <div class="rounded border border-slate-200 bg-white shadow-sm">
+              <div class="border-b border-slate-200 px-4 py-3">
+                <h2 class="text-base font-semibold">PDF 页列表</h2>
+                <p class="mt-1 text-xs text-slate-500">按页定位原始页、识别页和修订状态。</p>
+              </div>
+              <div class="max-h-[590px] overflow-y-auto p-3 scroll-thin">
+                <template x-for="page in filePages" :key="page.no">
+                  <button @click="activePage = page" :class="activePage.no === page.no ? 'border-blue-400 bg-blue-50' : 'border-slate-200 bg-white hover:bg-slate-50'" class="mb-2 w-full rounded border p-2 text-left">
+                    <div class="mb-2 h-24 rounded border bg-slate-50 p-2 text-[10px] leading-4 text-slate-400">
+                      <div class="h-2 w-20 rounded bg-slate-300"></div>
+                      <div class="mt-2 h-1.5 w-full rounded bg-slate-200"></div>
+                      <div class="mt-1 h-1.5 w-5/6 rounded bg-slate-200"></div>
+                      <div class="mt-3 grid grid-cols-3 gap-1">
+                        <span class="h-8 rounded bg-slate-200"></span>
+                        <span class="h-8 rounded bg-slate-200"></span>
+                        <span class="h-8 rounded bg-slate-200"></span>
+                      </div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                      <span class="text-xs font-medium" x-text="'第 ' + page.no + ' 页'"></span>
+                      <span :class="statusClass(page.status)" class="rounded-full px-2 py-0.5 text-[10px]" x-text="page.status"></span>
+                    </div>
+                    <div class="mt-1 text-[11px] text-slate-500" x-text="page.note"></div>
+                  </button>
+                </template>
+              </div>
+            </div>
+
+            <div class="rounded border border-slate-200 bg-white shadow-sm">
+              <div class="flex items-center justify-between border-b border-slate-200 px-4 py-3">
+                <h2 class="text-base font-semibold">PDF 原始页</h2>
+                <span class="text-xs text-slate-500" x-text="'原始上传 v1 / 第 ' + activePage.no + ' 页'"></span>
+              </div>
+              <div class="p-4">
+                <div class="min-h-[560px] rounded border border-slate-300 bg-white p-8 shadow-inner">
+                  <div class="border-b border-slate-300 pb-3 text-center">
+                    <div class="text-lg font-semibold tracking-widest text-slate-800">华北强降水过程气象服务材料</div>
+                    <div class="mt-1 text-xs text-slate-500">扫描 PDF 原始页模拟 / 页码 <span x-text="activePage.no"></span></div>
+                  </div>
+                  <div class="mt-6 space-y-3 text-sm leading-7 text-slate-700">
+                    <p>受冷涡系统和低层切变线共同影响，华北地区出现持续性降水过程。业务人员需补充过程起止时间、站点观测记录及预警发布情况。</p>
+                    <p class="rounded bg-yellow-100/70 px-2">原始扫描页此处存在阴影和水印，OCR 识别易将“短时强降水”误识别为“短肘强降水”。</p>
+                    <div class="mt-4 grid grid-cols-3 border border-slate-300 text-xs">
+                      <div class="border-r border-slate-300 bg-slate-50 p-2 font-medium">站点</div>
+                      <div class="border-r border-slate-300 bg-slate-50 p-2 font-medium">累计雨量</div>
+                      <div class="bg-slate-50 p-2 font-medium">预警状态</div>
+                      <div class="border-r border-t border-slate-300 p-2">海淀站</div>
+                      <div class="border-r border-t border-slate-300 p-2">83.5mm</div>
+                      <div class="border-t border-slate-300 p-2">暴雨黄色</div>
+                      <div class="border-r border-t border-slate-300 p-2">昌平站</div>
+                      <div class="border-r border-t border-slate-300 p-2">96.2mm</div>
+                      <div class="border-t border-slate-300 p-2">暴雨橙色</div>
+                    </div>
+                    <p class="text-xs text-slate-400">页脚水印：华风数据资料中心 2026</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="rounded border border-slate-200 bg-white shadow-sm">
+              <div class="flex items-center justify-between border-b border-slate-200 px-4 py-3">
+                <h2 class="text-base font-semibold">OCR 识别页 / 修订页</h2>
+                <select x-model="selectedVersion" class="h-8 rounded border border-slate-300 px-2 text-xs">
+                  <template x-for="version in versions" :key="version.no">
+                    <option :value="version.no" x-text="version.no + ' - ' + version.action"></option>
+                  </template>
+                </select>
+              </div>
+              <div class="p-4">
+                <div class="mb-3 rounded bg-blue-50 p-3 text-xs leading-5 text-blue-700">
+                  高亮规则：<span class="bg-red-100 px-1 text-red-700">红色</span> 为 OCR 错误，
+                  <span class="bg-green-100 px-1 text-green-700">绿色</span> 为人工修订，
+                  <span class="bg-amber-100 px-1 text-amber-700">黄色</span> 为初审意见关注点。
+                </div>
+                <div class="min-h-[255px] rounded border border-slate-200 p-4 text-sm leading-7">
+                  <p>受冷涡系统和低层切变线共同影响，华北地区出现持续性降水过程。</p>
+                  <p>业务人员需补充过程起止时间、站点观测记录及预警发布情况。</p>
+                  <p>原 OCR：出现<span class="bg-red-100 px-1 text-red-700 line-through">短肘强降水</span>；修订为<span class="bg-green-100 px-1 text-green-700">短时强降水</span>。</p>
+                  <p>表格订正：昌平站预警状态从<span class="bg-red-100 px-1 text-red-700 line-through">暴雨黄色</span>修订为<span class="bg-green-100 px-1 text-green-700">暴雨橙色</span>。</p>
+                  <p class="bg-amber-50 px-2 text-amber-700">初审意见：请保留原始页脚水印来源，不要删除资料出处。</p>
+                </div>
+
+                <div class="mt-4 rounded border border-slate-200">
+                  <div class="border-b border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium">版本差异</div>
+                  <div class="divide-y divide-slate-200">
+                    <template x-for="version in versions" :key="version.no">
+                      <div class="p-3 text-xs">
+                        <div class="flex items-center justify-between">
+                          <span class="font-medium text-slate-800" x-text="version.no + ' · ' + version.action"></span>
+                          <span class="text-slate-500" x-text="version.time"></span>
+                        </div>
+                        <div class="mt-1 text-slate-500">处理人：<span x-text="version.user"></span>；审核结果：<span x-text="version.result"></span></div>
+                        <div class="mt-1 text-slate-700" x-text="version.diff"></div>
+                      </div>
+                    </template>
+                  </div>
+                </div>
+
+                <div class="mt-4 grid grid-cols-3 gap-2">
+                  <button @click="toast('已保存当前页修订草稿')" class="rounded border border-slate-300 px-3 py-2 text-sm hover:bg-slate-50">保存修订</button>
+                  <button @click="setView('review')" class="rounded bg-emerald-600 px-3 py-2 text-sm text-white hover:bg-emerald-700">提交初审</button>
+                  <button @click="toast('若初审驳回，该文件版本将锁定')" class="rounded bg-red-600 px-3 py-2 text-sm text-white hover:bg-red-700">驳回锁定</button>
+                </div>
               </div>
             </div>
           </div>
@@ -709,6 +883,8 @@
         taskForm: {},
         selectedTask: {},
         activeReview: {},
+        activePage: {},
+        selectedVersion: 'v3',
         stats: [
           { label: '语料任务', value: 18, trend: '+4 本周', trendClass: 'text-emerald-600', icon: 'fa-solid fa-folder-open' },
           { label: '待初审批次', value: 9, trend: '+2 今日', trendClass: 'text-amber-600', icon: 'fa-solid fa-clipboard-check' },
@@ -808,6 +984,23 @@
           { id: 3, name: '批次 C-补充图件', time: '2026-05-22 09:40', content: '图片 / 图文描述', note: '用于文生图描述', members: '孙琪、许然', rounds: '上传 1 次', status: '执行中' },
           { id: 4, name: '批次 D-低质扫描件', time: '2026-05-24 14:05', content: 'PDF 扫描件', note: 'OCR 质量不达标', members: '高远、钱佳', rounds: '初审 2 次', status: '已驳回' }
         ],
+        requirementGroups: [
+          { name: '扫描文件收集', status: '待初审', goal: '收集 PDF、图片扫描件和 doc 文档，进入 OCR、订正和按页初审。', types: ['PDF', '图片', 'doc/docx'], steps: '上传 -> OCR -> 修订 -> 初审' },
+          { name: '结构化表格补录', status: '修订中', goal: '补录站点观测表、预警记录和过程指标，用于后续训练集整理。', types: ['Excel', '表格', '手工输入'], steps: '导入 -> 校验 -> 修订 -> 初审' },
+          { name: '人工文本录入', status: '执行中', goal: '按模板录入天气过程描述、服务建议和质量备注，多人协作完成。', types: ['模板文本', '问答对'], steps: '分配 -> 录入 -> 复核 -> 通过' }
+        ],
+        filePages: [
+          { no: 1, status: '通过', note: '封面和目录已确认' },
+          { no: 2, status: '通过', note: '过程摘要无修订' },
+          { no: 3, status: '待初审', note: 'OCR 存在 2 处疑似错误' },
+          { no: 4, status: '需修订', note: '表格预警状态需订正' },
+          { no: 5, status: '待初审', note: '页脚来源需保留' }
+        ],
+        versions: [
+          { no: 'v1', action: '原始上传', user: '李娜', time: '2026-05-18 10:30', result: '待解析', diff: '上传强降水过程材料.pdf，共 18 页。' },
+          { no: 'v2', action: 'OCR 识别', user: '系统算子', time: '2026-05-18 11:05', result: '识别完成', diff: '生成 OCR 文本，标记 8 个低置信片段。' },
+          { no: 'v3', action: '人工修订', user: '赵磊', time: '2026-05-19 15:42', result: '待初审', diff: '修订“短肘强降水”为“短时强降水”，订正昌平站预警状态。' }
+        ],
         pipelineNodes: [
           { name: '去重算子', version: 'v1.2.3', desc: '对上传语料标题、正文片段和文件摘要去重。', color: 'bg-blue-500', icon: 'fa-solid fa-copy', upgrade: false },
           { name: 'OCR 识别算子', version: 'v2.1.0', desc: '识别图片、扫描 PDF 中的文字并按页输出。', color: 'bg-emerald-500', icon: 'fa-solid fa-eye', upgrade: false },
@@ -829,11 +1022,12 @@
         init() {
           this.selectedTask = this.tasks[0]
           this.activeReview = this.reviewItems[0]
+          this.activePage = this.filePages[2]
           this.taskForm = this.emptyTaskForm()
         },
         setView(name) {
           this.view = name
-          const titles = { tasks: '语料任务列表', detail: '批次详情', review: '语料确认初审', pipeline: 'Pipeline / 算子', annotation: '标注管理' }
+          const titles = { tasks: '语料任务列表', detail: '批次详情', file: '文件处理与版本', review: '语料确认初审', pipeline: 'Pipeline / 算子', annotation: '标注管理' }
           this.pageTitle = titles[name]
         },
         navClass(name) {
