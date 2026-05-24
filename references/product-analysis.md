@@ -14,12 +14,14 @@ Extract these items from the user's words:
 - **Risk level**: Low-risk browsing, medium-risk editing, high-risk irreversible operations.
 - **Output expectation**: Prototype description, page spec, wireframe-level HTML/React, interaction flow, or design review.
 - **Lifecycle depth**: Whether the object has batches, uploads, file parsing, revisions, version diffs, review loops, locks, or downstream handoff.
+- **Human workflow depth**: Whether real users must coordinate across creation, contribution, correction, review, revision, rejection, pass, and handoff.
 
 ## Intent Questions
 
 Ask only the most important missing question. Good questions:
 
 - "这个后台最核心的日常任务是什么：处理待办、维护资料、监控异常，还是配置规则？"
+- "谁每天使用这个功能？他从哪里开始，完成后交给谁，异常时回到哪里？"
 - "主要使用者是谁：运营人员、管理员、审核人员，还是业务负责人？"
 - "你希望先看页面结构说明，还是直接要可运行的前端原型？"
 - "这个系统更偏高频操作，还是偏低频配置？这会影响页面密度和向导设计。"
@@ -45,6 +47,9 @@ Use this compact structure when reasoning:
   "page_scope": [],
   "critical_flows": [],
   "risk_points": [],
+  "human_workflow": [],
+  "handoff_points": [],
+  "exception_paths": [],
   "output_mode": "prototype_spec"
 }
 ```
@@ -53,6 +58,8 @@ Use this compact structure when reasoning:
 
 - Users of admin systems usually want to finish work, not explore.
 - A page exists only if it supports a real task, status judgment, or decision.
+- Design from human work, then derive page names. Do not derive work from menu names.
+- A complex feature is not complete until the user can start, pause, resume, correct, submit, review, revise/reject/pass, and hand off.
 - Complex work should be decomposed by lifecycle before pages are named.
 - The dashboard should answer: "What is happening, what needs attention, where do I go next?"
 - A list page should answer: "How do I find the right record and act on it?"
@@ -60,6 +67,7 @@ Use this compact structure when reasoning:
 - A form page should answer: "What do I need to enter, what is required, and what happens after saving?"
 - A wizard should be used when the user must complete dependent steps or many fields.
 - A review page should answer: "What changed, which version is affected, what decision is allowed, and what happens next?"
+- A workspace should answer: "What do I need to finish now, what evidence do I inspect, and what blocks my next step?"
 - High-risk actions need stronger confirmation and clearer consequences.
 
 ## Assumption Handling
@@ -85,5 +93,7 @@ If the user says the prototype is not right, check these causes:
 - Missing object lifecycle: No path from create to review to publish/archive.
 - Missing sub-object hierarchy: Batch, file, page, row, segment, or version was flattened away.
 - Missing version chain: Revision changes are not visible or review cannot target a version.
+- Missing human handoff: The design does not show who receives work after submit, pass, rejection, or revision.
+- Missing step closure: A page shows data but does not expose the user's next allowed action or feedback.
 - Missing risk handling: Delete, overwrite, disable, or approve lacks confirmation.
 - Wrong deliverable: User wanted runnable prototype, but got only text spec.

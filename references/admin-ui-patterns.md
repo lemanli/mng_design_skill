@@ -51,6 +51,25 @@ Rules:
 - Too many row actions should collapse secondary actions into "更多".
 - Provide empty, loading, no-result, and permission-denied states.
 
+## Operational Workspace
+
+Use when the user must finish a real unit of work rather than only browse records.
+
+Recommended structure:
+
+- Context header: object name, current state, owner, deadline, role, and allowed next action.
+- Work queue: items assigned to me, blocked items, pending review, needs revision, or abnormal items.
+- Evidence area: source file, original record, parsed content, previous version, comments, or history.
+- Action area: edit, upload, correct, submit, approve, reject, request revision, lock, export.
+- Feedback area: validation result, pipeline progress, review result, version created, or handoff destination.
+
+Rules:
+
+- The page should answer "what should I do next?" without forcing the user to infer it from status text.
+- Use drawers or split panes for evidence and history when the user must compare before acting.
+- Keep manager overview, contributor processing, and reviewer decision-making separated when their jobs differ.
+- If a workflow has multiple batches, files, pages, or versions, provide focused workspaces instead of one stacked page.
+
 ## Detail Page
 
 Use when a record has context that cannot fit in a table.

@@ -28,6 +28,7 @@
 │   └── openai.yaml
 └── references/
     ├── admin-ui-patterns.md
+    ├── human-workflow-design.md
     ├── output-templates.md
     ├── product-analysis.md
     └── workflow-closure.md
@@ -38,6 +39,7 @@
 - `SKILL.md`：技能入口，定义触发条件、核心工作流和协作规则。
 - `agents/openai.yaml`：技能展示和默认调用元数据。
 - `references/product-analysis.md`：产品经理式需求分析方法。
+- `references/human-workflow-design.md`：从真实使用者出发，拆解开始、处理、修订、审核、驳回、通过和交接的完整工作闭环。
 - `references/admin-ui-patterns.md`：后台管理系统常见页面与交互模式。
 - `references/output-templates.md`：需求理解、页面规划、PageSpec 和交互流程模板。
 - `references/workflow-closure.md`：任务、批次、文件上传、版本差异、审核闭环的分析方法。
@@ -68,6 +70,7 @@ Use $mng-design-skill to design a frontend prototype for an admin management sys
 ## 设计原则
 
 - 先理解用户目的，再设计页面。
+- 先判断真实使用者如何把工作从开始做到终态，再设计页面。
 - 先结构化业务对象、角色和动作，再画页面。
 - 后台系统优先考虑效率、密度、可扫描性和操作闭环。
 - 重要数据必须能跳转到明细处理路径。

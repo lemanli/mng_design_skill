@@ -23,6 +23,10 @@ Use these templates when producing admin frontend prototype deliverables.
 # 关键假设
 - ...
 
+# 人类工作闭环
+| 阶段 | 使用者 | 目标 | 输入/证据 | 页面/控件 | 操作 | 系统反馈 | 下一状态 | 异常路径 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+
 # 待确认项
 - ...
 ```
@@ -50,9 +54,30 @@ Use these templates when producing admin frontend prototype deliverables.
 - 一个任务包含哪些需求：
 - 每个需求包含哪些步骤：
 - 每个步骤有哪些内容类型：
+- 每个步骤是谁在什么页面完成：
+- 做完后交给谁或进入什么状态：
 - 哪些操作生成新版本：
 - 审核结论如何改变下一步：
+- 异常、驳回、锁定后如何处理：
 - 终态是什么：
+```
+
+## Functional Closure
+
+```markdown
+# 功能设计闭环：[功能名称]
+- 触发来源：
+- 主要使用者：
+- 目标：
+- 输入/证据：
+- 工作对象层级：
+- 关键步骤：
+- 每步页面/控件：
+- 系统反馈：
+- 版本/差异：
+- 审核/确认：
+- 异常路径：
+- 终态/交接：
 ```
 
 ## PageSpec
@@ -62,6 +87,8 @@ Use these templates when producing admin frontend prototype deliverables.
 - 页面目的：
 - 目标用户：
 - 入口来源：
+- 使用者当前要完成的工作：
+- 完成后下一步：
 - 布局结构：
 - 核心模块：
 - 主要字段 / 数据：
@@ -81,6 +108,7 @@ Use these templates when producing admin frontend prototype deliverables.
 3. 用户执行 [动作]。
 4. 系统展示 [反馈/校验/确认]。
 5. 成功后跳转或停留在 [目标状态]。
+6. 如果需要交接，系统把结果送到 [下一个角色/下一个工作台]。
 
 # 异常与边界
 - 无数据：
@@ -97,6 +125,9 @@ Use these templates when producing admin frontend prototype deliverables.
 
 # 关键假设
 [列出会影响设计的假设。]
+
+# 人类工作闭环
+[用表格说明真实使用者从开始、处理、修订、审核到终态的完整路径。]
 
 # 页面规划
 [列出导航和页面树。]
@@ -127,10 +158,13 @@ Before finalizing, check:
 
 - Did the prototype solve the user's stated purpose?
 - Is the target user clear?
+- Can a real user complete the work from trigger to terminal state?
+- Does every page have a human job, primary action, feedback, and next step?
 - Does every core object have a list/detail/create/edit path when needed?
 - Does the dashboard expose state, alerts, and useful jump paths?
 - Do list pages include filters, table, actions, pagination, and long-text handling?
 - Are forms grouped and efficient?
 - Are high-risk operations confirmed with consequences?
+- Are revision, rejection, lock, and handoff paths visible when the workflow needs them?
 - Are empty/loading/error/permission states mentioned?
 - Are assumptions explicit?
